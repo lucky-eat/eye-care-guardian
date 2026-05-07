@@ -169,6 +169,15 @@ function requestNotificationPermission() {
   }
 }
 
+async function requestNativeNotificationPermission() {
+  if (!isNative()) return;
+  try {
+    const { LocalNotifications } = window.Capacitor.Plugins;
+    const result = await LocalNotifications.requestPermissions();
+    // result.display will be 'granted' or 'denied'
+  } catch (e) { /* ignore */ }
+}
+
 // ---- 按钮事件 ----
 
 document.addEventListener('DOMContentLoaded', () => {

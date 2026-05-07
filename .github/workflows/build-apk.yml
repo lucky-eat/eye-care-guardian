@@ -23,12 +23,15 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-36 build-tools;36.0.0'
+          packages: |
+            platforms;android-36
+            build-tools;36.0.0
+            platform-tools
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Fix Gradle wrapper permissions
+      - name: Grant gradlew execute permission
         run: chmod +x android/gradlew
 
       - name: Sync Capacitor

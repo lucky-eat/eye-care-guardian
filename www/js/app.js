@@ -138,8 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
   updateDNDIndicator();
   updateDNDBanner();
 
-  // 请求通知权限
+  // 请求通知权限（Android 13+ 运行时权限）
   requestNotificationPermission();
+  requestNativeNotificationPermission();
 
   // Capacitor 通知监听（系统级闹钟点击回调）
   setupNotificationListeners();
