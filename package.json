@@ -1,0 +1,33 @@
+{
+  "name": "20s",
+  "version": "1.0.0",
+  "description": "护眼小卫士 - 定时提醒休息眼睛的Android应用",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve www -p 3000",
+    "build": "npx cap sync",
+    "open:android": "npx cap open android",
+    "sync": "npx cap sync"
+  },
+  "keywords": [
+    "eye-care",
+    "health",
+    "android"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/device": "^8.0.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/local-notifications": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "serve": "^14.2.6",
+    "typescript": "^6.0.3"
+  }
+}

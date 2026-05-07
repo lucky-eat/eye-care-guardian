@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#FF9800">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>护眼小卫士</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ===== 主界面 ===== -->
+<div id="page-main" class="page active">
+  <div class="header">
+    <span class="logo">🌿 护眼小卫士</span>
+    <span class="stat-badge" id="stat-badge">今日已休息 <b id="today-count">0</b> 次</span>
+  </div>
+
+  <div class="dnd-active-banner" id="dnd-active-banner" style="display:none">
+    🔕 免打扰中，休息提醒已静音 · <span id="dnd-active-range"></span>
+  </div>
+
+  <div class="tip-banner" id="tip-banner">
+    <span id="tip-text"></span>
+  </div>
+
+  <div class="timer-section">
+    <div class="timer-ring" id="timer-ring">
+      <svg viewBox="0 0 200 200" class="ring-svg">
+        <circle cx="100" cy="100" r="90" class="ring-bg" />
+        <circle cx="100" cy="100" r="90" class="ring-progress" id="ring-progress"
+                stroke-dasharray="565.49" stroke-dashoffset="0" />
+      </svg>
+      <div class="timer-inner">
+        <div class="timer-time" id="timer-display">20:00</div>
+        <div class="timer-label" id="timer-label">20分钟</div>
+      </div>
+    </div>
+    <div class="timer-status" id="timer-status">
+      <span class="status-dot"></span> 就绪
+    </div>
+    <div class="timer-controls">
+      <button class="btn-circle btn-pause" id="btn-pause" disabled>⏸ 暂停</button>
+      <button class="btn-circle btn-rest" id="btn-rest" disabled>✅ 我休息了</button>
+    </div>
+  </div>
+
+  <div class="presets">
+    <div class="preset-card active" data-minutes="20" onclick="selectPreset(20, this)">
+      <div class="preset-emoji">👶</div>
+      <div class="preset-name">20分钟</div>
+      <div class="preset-desc">轻度使用</div>
+    </div>
+    <div class="preset-card recommended" data-minutes="30" onclick="selectPreset(30, this)">
+      <div class="preset-emoji">⭐</div>
+      <div class="preset-name">30分钟</div>
+      <div class="preset-desc">推荐</div>
+    </div>
+    <div class="preset-card" data-minutes="45" onclick="selectPreset(45, this)">
+      <div class="preset-emoji">🧑</div>
+      <div class="preset-name">45分钟</div>
+      <div class="preset-desc">重度使用</div>
+    </div>
+    <div class="preset-card custom" data-minutes="0" onclick="openCustomDialog()">
+      <div class="preset-emoji">✏️</div>
+      <div class="preset-name">自定义</div>
+      <div class="preset-desc">任意时长</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="bottom-btn" id="btn-dnd" onclick="openPage('page-dnd')">
+      <span id="dnd-indicator" class="dnd-off">🔔</span>
+      <span>免打扰</span>
+    </button>
+    <button class="bottom-btn" onclick="openPage('page-settings')">
+      <span>⚙️</span>
+      <span>设置</span>
+    </button>
+  </div>
+</div>
+
+<!-- ===== 提醒弹窗（全屏覆盖） ===== -->
+<div id="alert-overlay" class="alert-overlay">
+  <div class="alert-content" id="alert-content">
+    <div class="alert-icon">⏰</div>
+    <div class="alert-title">该休息一下眼睛啦！</div>
+    <div class="alert-sub" id="alert-sub">你已经连续看了 20 分钟屏幕</div>
+    <div class="alert-exercise">
+      <div class="exercise-title">👀 休息小练习</div>
+      <div class="exercise-steps">
+        <div>1️⃣ 站起来活动一下身体</div>
+        <div>2️⃣ 看向窗外最远的地方</div>
+        <div>3️⃣ 眨眨眼，转动眼球</div>
+        <div>4️⃣ 坚持 <b>20秒</b> 后再继续</div>
+      </div>
+      <div class="exercise-tip">💡 重复此练习可有效缓解视觉疲劳</div>
+    </div>
+    <div class="alert-auto-countdown" id="alert-auto-countdown" style="display:none">
+      <div class="auto-countdown-ring">
+        <svg viewBox="0 0 80 80" width="60" height="60">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="5"/>
+          <circle cx="40" cy="40" r="34" fill="none" stroke="white" stroke-width="5"
+                  stroke-dasharray="213.63" id="auto-rest-progress" stroke-linecap="round"
+                  transform="rotate(-90 40 40)"/>
+        </svg>
+        <div class="auto-countdown-text" id="auto-countdown-text">20</div>
+      </div>
+      <div class="auto-countdown-label">秒后自动继续计时</div>
+    </div>
+
+    <div class="alert-actions" id="alert-actions">
+      <button class="btn-snooze" id="btn-snooze">⏳ 延期5分钟</button>
+      <button class="btn-done" id="btn-done">✅ 我休息好了</button>
+    </div>
+    <div class="alert-mute-hint">👆 点击任意位置可静音</div>
+  </div>
+</div>
+
+<!-- ===== 免打扰页 ===== -->
+<div id="page-dnd" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="openPage('page-main')">← 返回</button>
+    <span>免打扰</span>
+  </div>
+
+  <div class="page-body">
+    <div class="setting-group">
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">🔕 免打扰模式</div>
+          <div class="setting-desc">开启后将暂停所有休息提醒</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="dnd-master-switch" onchange="toggleDND()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-group" id="dnd-schedule-group">
+      <div class="group-title">⏰ 每日静音时段</div>
+      <div class="setting-row">
+        <span>🌅 开始时间</span>
+        <input type="time" class="time-input" id="dnd-start" value="23:00" onchange="saveDNDSettings()">
+      </div>
+      <div class="setting-row">
+        <span>🌙 结束时间</span>
+        <input type="time" class="time-input" id="dnd-end" value="09:00" onchange="saveDNDSettings()">
+      </div>
+      <div class="dnd-preview" id="dnd-preview"></div>
+    </div>
+
+    <div class="setting-group">
+      <div class="group-title">快捷免打扰</div>
+      <div class="quick-dnd">
+        <button class="quick-dnd-btn" onclick="quickDND('tonight')">
+          <div class="qd-emoji">🛏</div>
+          <div class="qd-name">今晚免打扰</div>
+          <div class="qd-desc">到明早8点</div>
+        </button>
+        <button class="quick-dnd-btn" onclick="quickDND('nap')">
+          <div class="qd-emoji">☕</div>
+          <div class="qd-name">午休免打扰</div>
+          <div class="qd-desc">12:00-13:30</div>
+        </button>
+        <button class="quick-dnd-btn" onclick="quickDND('movie')">
+          <div class="qd-emoji">🎬</div>
+          <div class="qd-name">观影模式</div>
+          <div class="qd-desc">暂停2小时</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 设置页 ===== -->
+<div id="page-settings" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="openPage('page-main')">← 返回</button>
+    <span>设置</span>
+  </div>
+
+  <div class="page-body">
+    <div class="setting-group">
+      <div class="group-title">📅 每日启动方式</div>
+      <div class="radio-group">
+        <label class="radio-row active" id="startup-scheduled-label" onclick="selectStartupMode('scheduled')">
+          <div class="radio-info">
+            <div class="radio-title">⏰ 定时提醒启动</div>
+            <div class="radio-desc">每天固定时间弹通知，点击确认后开始护眼</div>
+          </div>
+          <div class="radio-dot"></div>
+        </label>
+        <div class="time-row" id="startup-time-row">
+          <span>启动提醒时间</span>
+          <input type="time" class="time-input" id="daily-startup-time" value="09:00" onchange="saveSettings()">
+        </div>
+        <label class="radio-row" id="startup-detect-label" onclick="selectStartupMode('detect')">
+          <div class="radio-info">
+            <div class="radio-title">📱 智能检测启动</div>
+            <div class="radio-desc">检测到开始用手机时询问是否启动护眼</div>
+          </div>
+          <div class="radio-dot"></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="group-title">🔔 提醒方式</div>
+      <div class="radio-group">
+        <label class="radio-row" id="alert-vibrate-label" onclick="selectAlertMode('vibrate')">
+          <div class="radio-info">
+            <div class="radio-title">📳 仅振动</div>
+            <div class="radio-desc">静音场合首选</div>
+          </div>
+          <div class="radio-dot"></div>
+        </label>
+        <label class="radio-row" id="alert-sound-label" onclick="selectAlertMode('sound')">
+          <div class="radio-info">
+            <div class="radio-title">🔊 仅声音</div>
+            <div class="radio-desc">不振动</div>
+          </div>
+          <div class="radio-dot"></div>
+        </label>
+        <label class="radio-row active" id="alert-both-label" onclick="selectAlertMode('both')">
+          <div class="radio-info">
+            <div class="radio-title">📳🔊 声音 + 振动</div>
+            <div class="radio-desc">最强提醒效果</div>
+          </div>
+          <div class="radio-dot"></div>
+        </label>
+      </div>
+
+      <div class="setting-row" id="vibrate-count-row">
+        <span>📳 振动次数</span>
+        <input type="number" class="num-input" id="vibrate-count" value="3" min="1" max="10" onchange="saveSettings()">
+        <span>次</span>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="group-title">🔄 自动重新计时</div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-title">休息后自动开始</div>
+          <div class="setting-desc">提醒弹出后休息X秒自动开始下一轮</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="auto-restart-switch" onchange="toggleAutoRestart()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="setting-row" id="rest-duration-row" style="display:none">
+        <span>⏱ 休息时长</span>
+        <input type="number" class="num-input" id="rest-duration" value="20" min="10" max="120" onchange="saveAutoRestartSettings()">
+        <span>秒</span>
+      </div>
+      <div class="auto-restart-hint" id="auto-restart-hint" style="display:none; font-size:12px; color:#8D6E63; text-align:center; padding:8px; background:#FFF3E0; border-radius:8px;">
+        💡 提醒弹出 → 休息 <span id="hint-duration">20</span> 秒倒计时 → 自动继续下一轮计时
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 自定义时长对话框 ===== -->
+<div id="custom-dialog-overlay" class="dialog-overlay" onclick="event.target === this && closeCustomDialog()">
+  <div class="dialog">
+    <div class="dialog-title">⏱ 自定义时长</div>
+    <div class="dialog-body">
+      <div class="custom-time-input">
+        <button class="adj-btn" onclick="adjustCustomMinutes(-5)">−5</button>
+        <input type="number" id="custom-minutes" value="25" min="1" max="120">
+        <button class="adj-btn" onclick="adjustCustomMinutes(5)">+5</button>
+      </div>
+      <div class="custom-label">分钟（1-120）</div>
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-cancel" onclick="closeCustomDialog()">取消</button>
+      <button class="dialog-confirm" onclick="confirmCustomTimer()">✅ 开始计时</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/tips.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/dnd.js"></script>
+<script src="js/bridge.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

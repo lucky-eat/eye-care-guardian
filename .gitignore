@@ -1,0 +1,14 @@
+node_modules/
+android/app/build/
+android/build/
+android/.gradle/
+android/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+.superpowers/
+.claude/
+.DS_Store
+Thumbs.db
+*.log
