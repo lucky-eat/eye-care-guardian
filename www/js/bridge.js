@@ -17,14 +17,16 @@ function hasAlarmPlugin() {
 }
 
 const Notif = {
-  async schedule(secondsFromNow, title, body) {
+  async schedule(secondsFromNow, title, body, alertMode, vibrateCount) {
     // 优先使用原生 AlarmPlugin（最可靠）
     if (hasAlarmPlugin()) {
       try {
         await window.Capacitor.Plugins.AlarmPlugin.schedule({
           seconds: secondsFromNow,
           title: title,
-          body: body
+          body: body,
+          alertMode: alertMode || 'both',
+          vibrateCount: vibrateCount || 3,
         });
         return;
       } catch (e) { /* fall through */ }

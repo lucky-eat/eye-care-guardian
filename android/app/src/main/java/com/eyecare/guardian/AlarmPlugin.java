@@ -21,6 +21,8 @@ public class AlarmPlugin extends Plugin {
         int seconds = call.getInt("seconds", 1200);
         String title = call.getString("title", "护眼小卫士");
         String body = call.getString("body", "该休息一下眼睛了！");
+        String alertMode = call.getString("alertMode", "both");
+        int vibrateCount = call.getInt("vibrateCount", 3);
 
         Context context = getContext();
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -28,6 +30,8 @@ public class AlarmPlugin extends Plugin {
         Intent intent = new Intent(context, AlarmReceiver.class);
         intent.putExtra("title", title);
         intent.putExtra("body", body);
+        intent.putExtra("alertMode", alertMode);
+        intent.putExtra("vibrateCount", vibrateCount);
 
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -53,7 +57,6 @@ public class AlarmPlugin extends Plugin {
                 }
             }
         } catch (SecurityException e) {
-            // SCHEDULE_EXACT_ALARM 被拒绝 → 降级为非精确闹钟
             if (alarmManager != null) {
                 alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent);
             }

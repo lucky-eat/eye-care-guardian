@@ -82,10 +82,12 @@ function startTimer() {
   const restBtn = document.getElementById('btn-rest');
   if (restBtn) restBtn.disabled = false;
 
-  // 系统级闹钟（锁屏/后台也能触发）
+  // 系统级闹钟（锁屏/后台也能触发，传入提醒设置）
   Notif.schedule(timerSeconds,
     '护眼小卫士',
-    '该休息一下眼睛了！已连续看屏幕 ' + (timerTotal / 60) + ' 分钟');
+    '该休息一下眼睛了！已连续看屏幕 ' + (timerTotal / 60) + ' 分钟',
+    s.alertMode,
+    s.vibrateCount);
 
   timerInterval = setInterval(() => {
     timerSeconds--;
