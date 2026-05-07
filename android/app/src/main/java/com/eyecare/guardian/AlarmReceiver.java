@@ -10,9 +10,6 @@ import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
-import android.os.VibratorManager;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -50,15 +47,21 @@ public class AlarmReceiver extends BroadcastReceiver {
             context, 0, openIntent, flags
         );
 
-        // 根据 alertMode 配置通知
-        int defaults = 0;
         boolean playSound = alertMode.equals("sound") || alertMode.equals("both");
         boolean doVibrate = alertMode.equals("vibrate") || alertMode.equals("both");
 
-        if (playSound) {
-            defaults |= NotificationCompat.DEFAULT_SOUND;
+        // 构建振动模式（绑定在通知上，不受 BroadcastReceiver 生命周期限制）
+        long[] vibratePattern = null;
+        if (doVibrate && vibrateCount > 0) {
+            vibratePattern = new long[1 + vibrateCount * 2];
+            vibratePattern[0] = 0; // 立即开始
+            for (int i = 0; i < vibrateCount; i++) {
+                vibratePattern[1 + i * 2] = 300;      // 振动 300ms
+                vibratePattern[1 + i * 2 + 1] = 500;   // 间隔 500ms
+            }
         }
-        // 不设置 DEFAULT_VIBRATE，用自定义振动代替
+
+        int defaults = playSound ? NotificationCompat.DEFAULT_SOUND : 0;
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
@@ -68,39 +71,9 @@ public class AlarmReceiver extends BroadcastReceiver {
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .setDefaults(defaults)
-            .setVibrate(null); // 用自定义振动
+            .setVibrate(vibratePattern);  // null = 不振动, pattern = 自定义次数
 
         NotificationManagerCompat.from(context).notify(991, builder.build());
-
-        // 自定义振动
-        if (doVibrate) {
-            vibrateCustom(context, vibrateCount);
-        }
-    }
-
-    private void vibrateCustom(Context context, int count) {
-        try {
-            // 构建振动模式：[delay, on, off, on, off, ...]
-            long[] pattern = new long[1 + count * 2];
-            pattern[0] = 0; // 立即开始
-            for (int i = 0; i < count; i++) {
-                pattern[1 + i * 2] = 300;     // 振动 300ms
-                pattern[1 + i * 2 + 1] = 500;  // 暂停 500ms
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                VibratorManager vm = (VibratorManager) context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-                if (vm != null) {
-                    Vibrator v = vm.getDefaultVibrator();
-                    v.vibrate(VibrationEffect.createWaveform(pattern, -1));
-                }
-            } else {
-                Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-                if (v != null) {
-                    v.vibrate(VibrationEffect.createWaveform(pattern, -1));
-                }
-            }
-        } catch (Exception e) { /* ignore */ }
     }
 
     private void createNotificationChannel(Context context) {
@@ -119,7 +92,7 @@ public class AlarmReceiver extends BroadcastReceiver {
             );
             channel.setDescription("休息提醒通知");
             channel.setSound(soundUri, attrs);
-            channel.enableVibration(false); // 我们用自定义振动
+            channel.enableVibration(false); // 用通知自带的 setVibrate 控制
 
             NotificationManager manager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
