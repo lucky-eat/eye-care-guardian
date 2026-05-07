@@ -20,13 +20,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-36
-            build-tools;36.0.0
-            platform-tools
+      - name: Install Android SDK platform
+        run: |
+          yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-35" "build-tools;35.0.0" 2>&1 || true
+          # If android-35 is unavailable, try 34
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list 2>/dev/null | grep "platforms;android" | tail -5 || true
 
       - name: Install dependencies
         run: npm ci
