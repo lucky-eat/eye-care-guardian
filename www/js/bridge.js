@@ -42,7 +42,7 @@ const Notif = {
             title: title,
             body: body,
             schedule: { at: new Date(Date.now() + secondsFromNow * 1000) },
-            channelId: 'eyecare-alert',
+            channelId: 'eyecare-alert-v2',
           }]
         });
       } catch (e) { /* ignore */ }

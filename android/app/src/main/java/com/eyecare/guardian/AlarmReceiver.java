@@ -15,7 +15,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
-    private static final String CHANNEL_ID = "eyecare-alert";
+    private static final String CHANNEL_ID = "eyecare-alert-v2";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -78,6 +78,13 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     private void createNotificationChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager manager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (manager == null) return;
+
+            // 删除旧渠道（v1），强制用新配置重建
+            manager.deleteNotificationChannel("eyecare-alert");
+
             Uri soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
             AudioAttributes attrs = new AudioAttributes.Builder()
@@ -92,13 +99,10 @@ public class AlarmReceiver extends BroadcastReceiver {
             );
             channel.setDescription("休息提醒通知");
             channel.setSound(soundUri, attrs);
-            channel.enableVibration(false); // 用通知自带的 setVibrate 控制
+            channel.enableVibration(true);
+            channel.setVibrationPattern(null); // 由每条通知的 setVibrate 控制
 
-            NotificationManager manager =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (manager != null) {
-                manager.createNotificationChannel(channel);
-            }
+            manager.createNotificationChannel(channel);
         }
     }
 }
